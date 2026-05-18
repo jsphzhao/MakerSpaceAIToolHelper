@@ -31,6 +31,24 @@ npm run dev
 
 Open the URL shown in the terminal (usually `http://localhost:5173`).
 
+## Testing on your phone
+
+To use the app on a phone while developing, expose the dev server on your local network:
+
+1. Start the dev server with network access:
+
+```bash
+npm run dev -- --host
+```
+
+2. Connect your phone and computer to the **same Wi‑Fi network**.
+
+3. Open the **Network** URL from the terminal on your phone (for example, `http://10.105.149.238:5173`). Your IP may differ—use the address Vite prints after `--host`.
+
+If the page does not load, allow incoming connections for Node or your terminal app in **System Settings → Network → Firewall** (macOS).
+
+**Camera on your phone:** Browsers block live camera preview over plain HTTP (except on `localhost`). When you open the app via your network IP, use the **Take photo** button—it opens your phone’s built-in camera and works without HTTPS. On desktop or over HTTPS, **Use camera** provides a live preview instead.
+
 ## Build
 
 ```bash

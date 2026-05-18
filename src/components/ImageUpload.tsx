@@ -5,13 +5,23 @@ interface ImageUploadProps {
   disabled?: boolean;
 }
 
+function canUseLiveCamera() {
+  return (
+    typeof window !== "undefined" &&
+    window.isSecureContext &&
+    !!navigator.mediaDevices?.getUserMedia
+  );
+}
+
 export function ImageUpload({ onImageSelected, disabled }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
+  const liveCamera = canUseLiveCamera();
 
   const handleFile = useCallback(
     (file: File) => {
@@ -53,9 +63,25 @@ export function ImageUpload({ onImageSelected, disabled }: ImageUploadProps) {
         }
       });
     } catch {
-      alert("Could not access camera. Please upload an image instead.");
+      alert(
+        window.isSecureContext
+          ? "Could not access camera. Check permissions or upload an image instead."
+          : "Live camera preview requires HTTPS. Use Take photo or upload an image instead."
+      );
     }
   }, []);
+
+  const openCamera = useCallback(() => {
+    if (cameraOpen) {
+      stopCamera();
+      return;
+    }
+    if (liveCamera) {
+      void startCamera();
+    } else {
+      cameraInputRef.current?.click();
+    }
+  }, [cameraOpen, liveCamera, startCamera, stopCamera]);
 
   const capturePhoto = useCallback(() => {
     const video = videoRef.current;
@@ -131,14 +157,34 @@ export function ImageUpload({ onImageSelected, disabled }: ImageUploadProps) {
         }}
       />
 
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="sr-only"
+        disabled={disabled}
+        aria-hidden="true"
+        tabIndex={-1}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = "";
+        }}
+      />
+
       <div className="upload-actions">
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={cameraOpen ? stopCamera : startCamera}
+          onClick={openCamera}
           disabled={disabled}
         >
-          {cameraOpen ? "Close camera" : "Use camera"}
+          {cameraOpen
+            ? "Close camera"
+            : liveCamera
+              ? "Use camera"
+              : "Take photo"}
         </button>
       </div>
 
